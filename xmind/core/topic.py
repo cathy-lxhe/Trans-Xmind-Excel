@@ -9,6 +9,7 @@
     :license:
 
 """
+from Queue import PriorityQueue
 
 __author__ = "aiqi@xmind.net <Woody Ai>"
 
@@ -24,6 +25,7 @@ from .markerref import MarkerId
 
 from .. import utils
 
+import logging
 
 def split_hyperlink(hyperlink):
     colon = hyperlink.find(":")
@@ -46,7 +48,8 @@ class TopicElement(WorkbookMixinElement):
         super(TopicElement, self).__init__(node, ownerWorkbook)
 
         self.addIdAttribute(const.ATTR_ID)
-
+        self.parentText = None
+        
     def _get_title(self):
         return self.getFirstChildNodeByTagName(const.TAG_TITLE)
 
@@ -195,7 +198,7 @@ class TopicElement(WorkbookMixinElement):
         if parent.tagName == const.TAG_TOPICS:
             topics = TopicsElement(parent, self.getOwnerWorkbook())
             return topics.getType()
-
+    
     def getTopics(self, topics_type=const.TOPIC_ATTACHED):
         topic_children = self._get_children()
 
@@ -215,7 +218,14 @@ class TopicElement(WorkbookMixinElement):
             return
 
         return topics.getSubTopics()
-
+    
+    def getSubTopicsWithParent(self, topics_type=const.TOPIC_ATTACHED): 
+        topics = self.getTopics(topics_type)
+        if not topics:
+            return
+        parentName = self.getTitle()
+        return topics.getSubTopicsWithParent(parentName)   
+          
     def getSubTopicByIndex(self, index, topics_type=const.TOPIC_ATTACHED):
         """ Get sub topic by speicifeid index
         """
@@ -354,8 +364,103 @@ class TopicElement(WorkbookMixinElement):
             notes.getImplementation().removeChild(old)
 
         notes.appendChild(new)
-
-
+        
+       
+    def get_type_priority(self):
+        """通过标记获取节点上的标记优先级和用例类型"""
+        marks = self.getMarkers()
+        dict_priority = {"priority-1":'P0',"priority-3":'P2'}
+        dict_type = {"flag-red":'UI与系统兼容'}
+        type = None
+        priority = None
+        if marks is None:
+            return type,priority
+        for mark in marks:
+            id = str(mark.getMarkerId())
+            if dict_priority.has_key(id):
+                priority=dict_priority[id]
+            elif dict_type.has_key(id):
+                type = dict_type[id]
+        return type,priority
+    
+        
+    def getStepNotes(self):
+        """获取节点备注里的步骤和备注"""
+        notes_content = ""
+        step,notes= "",""
+        if self.getNotes() is not None:
+            notes_content = self.getNotes().getContent() 
+        else:
+            return step,notes
+        notes_rows = []
+        if not '\n' in notes_content:
+            notes_rows.append(notes_content)
+        else:
+            notes_rows = notes_content.split( '\n') 
+        notes_dict={}
+        for rows in notes_rows:
+            rows = str(rows)
+            if rows.strip() == "": # 处理某些行为空行的特殊情况
+                continue
+            rows = rows.replace(":","：")
+            row_split = rows.split( "：",1) # 只分割一次
+            notes_dict[row_split[0].encode( 'utf -8')] = row_split[1].encode('utf-8' )
+        
+        if notes_dict.has_key("步骤"):
+            step = notes_dict["步骤"]
+        if notes_dict.has_key("备注"):
+            notes = notes_dict["备注"]
+          
+        return step,notes
+     
+    def getParentTopic(self):
+        """获取主题的父主题"""
+        parent = self.getParentNode()
+        if parent is None:
+            return 
+        
+        while parent and parent.tagName != const.TAG_TOPIC:
+            if parent.tagName == const.TAG_SHEET:
+                return None
+            parent = parent.parentNode   
+        parentTopic = TopicElement(parent, self.getOwnerWorkbook()) 
+        return parentTopic
+    
+    def setPriorityType(self,priority=None,type=None):
+        """设置topic的优先级和用例类型，用图标标记"""
+        dictPriority ={"P0":"priority-1","P1":None,"P2":"priority-3"}
+        dictType = {"UI与系统兼容":"flag-red","功能逻辑":None}
+        if priority is not None and not (priority in dictPriority.keys()):
+            logging.warn("Excel中存在未定义的用例优先级【"+str(priority)+"】，默认置为P0")
+        if type is not None and not (type in dictType.keys()):
+            logging.warn("Excel中存在未定义的用例类型【"+str(type)+"】默认置为功能逻辑用例")
+        if dictPriority.has_key(priority):
+            self.addMarker(dictPriority[priority])
+        if dictType.has_key(type):
+            self.addMarker(dictType[type])
+        
+    
+    def setStepsNotes(self,steps,notes):
+        """设置topic的步骤和备注，用Note来存储这些信息"""
+        contents = ""
+        if steps is not None and steps != "":
+            steps = str(steps).replace("\n","；")
+            stepText = "步骤："+steps +"\n"
+            contents += stepText
+        if notes is not None and notes != "":
+            notes = str(notes).replace("\n","；")
+            noteText = "备注："+notes +"\n"
+            contents += noteText
+        if contents == "":
+            return None
+        self.setPlainNotes(contents)
+    
+    def addVersionTopic(self,verstion):
+        """新建一个FloatingTopic，表示版本号"""
+        versionTopic = TopicElement()
+        versionTopic.setTitle(verstion)
+        self.addSubTopic(versionTopic,topics_type ="detached" )
+        
 class ChildrenElement(WorkbookMixinElement):
     TAG_NAME = const.TAG_CHILDREN
 
@@ -389,7 +494,18 @@ class TopicsElement(WorkbookMixinElement):
             topics.append(TopicElement(t, ownerWorkbook))
 
         return topics
+    
+    def getSubTopicsWithParent(self,parentName):
+        topics = []
+        ownerWorkbook = self.getOwnerWorkbook()
+        for t in self.getChildNodesByTagName(const.TAG_TOPIC):
+            topicWithParent = TopicElement(t, ownerWorkbook)
+            topicWithParent.setParentText(parentName)
+            topics.append(topicWithParent)
 
+        return topics
+
+    
     def getSubTopicByIndex(self, index):
         """
         Get specified sub topic by index

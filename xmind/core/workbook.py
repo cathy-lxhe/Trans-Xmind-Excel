@@ -132,6 +132,7 @@ class WorkbookDocument(Document):
         self._path = path
         # Initialize WorkbookDocument to make sure that contains
         # WorkbookElement as root.
+        # WorkbookDocument继承于Document类，Document类继承于Node类，所以这里可以直接调用Node类的方法
         _workbook_element = self.getFirstChildNodeByTagName(
             const.TAG_WORKBOOK)
 
@@ -249,7 +250,29 @@ class WorkbookDocument(Document):
     def set_path(self, path):
         self._path = utils.get_abs_path(path)
 
-
+    def get_case_topics(self):
+        '''获取该sheet中所有的主题
+        @author: cathy
+        '''
+        case_topics_list = []
+        sheets = self.getSheets()
+        for sheet in sheets:
+            module_topic = sheet.getRootTopic()
+            function_topics = module_topic.getSubTopics()
+            for function_topic in function_topics:
+                case_topics = function_topic.getSubTopics()
+                for case_topic in case_topics:
+                    case_topic.set_version("6.2")
+                    case_topic.set_function(function_topic.getTitle())
+                    case_topics_list.append(case_topic)
+        return case_topics_list
+    
+    def case_topics_trans(self,case_topics_list):
+        list = []
+        for case_topic in case_topics_list:
+            list.append(case_topic.topic_2_dict()) 
+        return list
+        
 def main():
     pass
 

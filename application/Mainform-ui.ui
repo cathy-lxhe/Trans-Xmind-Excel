@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>556</width>
+    <height>318</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Xmind转换工具箱</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelOrinFile">
+        <property name="text">
+         <string>源文件  ：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="lineEditOrin"/>
+      </item>
+      <item row="0" column="2">
+       <widget class="QPushButton" name="pBtnTrans">
+        <property name="text">
+         <string>选择输出文件地址并转换</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QTextBrowser" name="textBrowser">
+      <property name="openExternalLinks">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>556</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_2">
+    <property name="title">
+     <string>文件</string>
+    </property>
+    <addaction name="action_ReadXmind"/>
+    <addaction name="action_ReadExcel"/>
+    <addaction name="separator"/>
+    <addaction name="action_exit"/>
+   </widget>
+   <addaction name="menu_2"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="separator"/>
+   <addaction name="action_ReadXmind"/>
+   <addaction name="action_ReadExcel"/>
+   <addaction name="separator"/>
+  </widget>
+  <action name="action_ReadXmind">
+   <property name="icon">
+    <iconset resource="../ui/img/img.qrc">
+     <normaloff>:/img/new_branding_new_logo.png</normaloff>:/img/new_branding_new_logo.png</iconset>
+   </property>
+   <property name="text">
+    <string>读取Xmind文件</string>
+   </property>
+  </action>
+  <action name="action_ReadExcel">
+   <property name="icon">
+    <iconset resource="../ui/img/img.qrc">
+     <normaloff>:/img/647702-excel-512.png</normaloff>:/img/647702-excel-512.png</iconset>
+   </property>
+   <property name="text">
+    <string>读取Excel文件</string>
+   </property>
+  </action>
+  <action name="action_exit">
+   <property name="text">
+    <string>退出</string>
+   </property>
+  </action>
+  <action name="action_3">
+   <property name="text">
+    <string>转换</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="../ui/img/img.qrc"/>
+ </resources>
+ <connections/>
+</ui>
